@@ -2,17 +2,26 @@ import streamlit as st
 import requests
 from PIL import Image
 from io import BytesIO
+from diffusers import DiffusionPipeline
+import torch
 
 # Setting page layout
 st.set_page_config(
-    page_title="Midjourney v6 Text-to-Image Generation",
+    page_title="AI Text-to-Image Generation",
     page_icon="✨",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
+# Sidebar
 st.sidebar.header("About App")
-st.sidebar.markdown('This is a zero-shot text-to-image generation chatbot using Midjourney v6 model by <a href="https://ai.jdavis.xyz" target="_blank">0xjdavis</a>.', unsafe_allow_html=True)
+st.sidebar.markdown('This is a zero-shot text-to-image generation chatbot using various AI models by <a href="https://ai.jdavis.xyz" target="_blank">0xjdavis</a>.', unsafe_allow_html=True)
+
+# Model selection dropdown
+model_option = st.sidebar.selectbox(
+    "Select Model",
+    ("Midjourney v6", "FLUX.1-schnell")
+)
 
 # Calendly
 st.sidebar.markdown("""
@@ -31,21 +40,12 @@ st.sidebar.markdown("""
 # Copyright
 st.sidebar.caption("©️ Copyright 2024 J. Davis")
 
-st.title("Midjourney v6 Text-to-Image Generation")
-st.write("Prompted artwork powered by Midjourney v6 Model")
+st.title("AI Text-to-Image Generation")
+st.caption(f"Prompted artwork powered by {model_option} Model")
 
-# Hugging Face API
-API_URL = "https://api-inference.huggingface.co/models/Kvikontent/midjourney-v6"
-headers = {"Authorization": f"Bearer {st.secrets['huggingface_key']}"}
-
-def query(payload):
-    response = requests.post(API_URL, headers=headers, json=payload)
-    return response.content
-
-# ---------------------------------------------- 
 # CTA BUTTON
 if "messages" in st.session_state:
-    url = "/Midjourney%20Text%20To%20Image%20Generation"
+    url = "/AI%20Text%20To%20Image%20Generation"
     st.markdown(
         f'<div><a href="{url}" target="_self" style="justify-content:center; padding: 10px 10px; background-color: #2D2D2D; color: #efefef; text-align: center; text-decoration: none; font-size: 16px; border-radius: 8px;">Clear History</a></div><br /><br />',
         unsafe_allow_html=True
@@ -57,39 +57,40 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-if prompt := st.chat_input():
-    if "huggingface_key" not in st.secrets:
-        st.info("Please add your Hugging Face API key to continue.")
-        st.stop()
+# Load the selected model
+@st.cache_resource
+def load_model(model_name):
+    if model_name == "Midjourney v6":
+        return DiffusionPipeline.from_pretrained("Kvikontent/midjourney-v6", torch_dtype=torch.float16).to("cuda")
+    elif model_name == "FLUX.1-schnell":
+        return DiffusionPipeline.from_pretrained("black-forest-labs/FLUX.1-schnell", torch_dtype=torch.float16).to("cuda")
 
+model = load_model(model_option)
+
+if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    # ----------------------------------------------
-    # GENERATE IMAGE
+    # Generate image
     with st.spinner("Generating image..."):
-        image_bytes = query({
-            "inputs": prompt,
-        })
+        image = model(prompt).images[0]
 
-    if image_bytes:
-        image = Image.open(BytesIO(image_bytes))
-        st.image(image, caption=prompt)
+    # Display the generated image
+    st.image(image)
 
-        with st.expander("Download Image"):
-            # ----------------------------------------------
-            # DOWNLOAD BUTTON
-            buf = BytesIO()
-            image.save(buf, format="PNG")
-            byte_image = buf.getvalue()
+    with st.expander("View Image Details"):
+        # Convert PIL Image to bytes
+        buf = BytesIO()
+        image.save(buf, format="PNG")
+        byte_image = buf.getvalue()
 
-            btn = st.download_button(
-                label="Download Image",
-                data=byte_image,
-                file_name="midjourney_image.png",
-                mime="image/png",
-            )
-    else:
-        st.error("Failed to generate image. Please try again.")
+        # Download button
+        btn = st.download_button(
+            label="Download Image",
+            data=byte_image,
+            file_name="generated_image.png",
+            mime="image/png",
+        )
 
+    # Add the assistant's response to the chat history
     st.session_state.messages.append({"role": "assistant", "content": "Here's the image I generated based on your prompt. What do you think?"})
