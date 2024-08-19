@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from PIL import Image
 from io import BytesIO
+import base64
 
 # Setting page layout
 st.set_page_config(
@@ -43,7 +44,7 @@ st.sidebar.markdown("""
 st.sidebar.caption("©️ Copyright 2024 J. Davis")
 
 st.title("Hugging Face Text-to-Image Generation")
-st.caption("Prompted artwork powered by Hugging Face Models")
+st.caption(f"Prompted artwork powered by {selected_model} Model")
 
 # CTA BUTTON
 if "messages" in st.session_state:
@@ -81,22 +82,20 @@ if prompt := st.chat_input():
 
     # Display the image
     image = Image.open(BytesIO(image_bytes))
-    st.image(image)
+    st.image(image, caption="Generated Image")
 
     with st.expander("View Image Details"):
         # DOWNLOAD BUTTON
-        buf = BytesIO()
-        image.save(buf, format="PNG")
-        byte_image = buf.getvalue()
-
         btn = st.download_button(
             label="Download Image",
-            data=byte_image,
+            data=image_bytes,
             file_name="generated_image.png",
             mime="image/png",
         )
-        st.markdown("Image generated using the selected Hugging Face model.")
+        
+        # Display base64 encoded image for debugging
+        st.text("Base64 Encoded Image:")
+        st.text(base64.b64encode(image_bytes).decode())
 
-# Add the generated image to the chat history
-if 'image' in locals():
-    st.session_state.messages.append({"role": "assistant", "content": "Here's the generated image based on your prompt."})
+# Copyright
+st.caption("©️ Copyright 2024 J. Davis")
