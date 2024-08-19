@@ -44,7 +44,7 @@ st.sidebar.markdown("""
 st.sidebar.caption("©️ Copyright 2024 J. Davis")
 
 st.title("Hugging Face Text-to-Image Generation")
-st.caption(f"Prompted artwork powered by {selected_model} Model")
+st.write(f"Prompted artwork powered by {selected_model} Model")
 
 # CTA BUTTON
 if "messages" in st.session_state:
@@ -96,6 +96,3 @@ if prompt := st.chat_input():
         # Display base64 encoded image for debugging
         st.text("Base64 Encoded Image:")
         st.text(base64.b64encode(image_bytes).decode())
-
-# Copyright
-st.caption("©️ Copyright 2024 J. Davis")
