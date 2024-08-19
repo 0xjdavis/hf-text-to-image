@@ -36,7 +36,7 @@ st.write("Prompted artwork powered by Midjourney v6 Model")
 
 # Hugging Face API
 API_URL = "https://api-inference.huggingface.co/models/Kvikontent/midjourney-v6"
-headers = {"Authorization": f"Bearer {st.secrets['huggingface_token']}"}
+headers = {"Authorization": f"Bearer {st.secrets['huggingface_key']}"}
 
 def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
