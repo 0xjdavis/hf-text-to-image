@@ -58,8 +58,8 @@ for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
 if prompt := st.chat_input():
-    if "huggingface_token" not in st.secrets:
-        st.info("Please add your Hugging Face API token to continue.")
+    if "huggingface_key" not in st.secrets:
+        st.info("Please add your Hugging Face API key to continue.")
         st.stop()
 
     st.session_state.messages.append({"role": "user", "content": prompt})
