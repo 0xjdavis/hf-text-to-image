@@ -64,35 +64,41 @@ if prompt := st.chat_input():
     if not huggingface_api_key:
         st.info("Please add your Hugging Face API key to continue.")
         st.stop()
-
+    
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-
+    
     # GENERATE IMAGE
     API_URL = f"https://api-inference.huggingface.co/models/{model_options[selected_model]}"
     headers = {"Authorization": f"Bearer {huggingface_api_key}"}
-
+    
     def query(payload):
         response = requests.post(API_URL, headers=headers, json=payload)
         return response.content
-
+    
     image_bytes = query({
         "inputs": prompt,
     })
-
-    # Display the image
-    image = Image.open(BytesIO(image_bytes))
-    st.image(image, caption="Generated Image")
-
-    with st.expander("View Image Details"):
-        # DOWNLOAD BUTTON
-        btn = st.download_button(
-            label="Download Image",
-            data=image_bytes,
-            file_name="generated_image.png",
-            mime="image/png",
-        )
+    
+    try:
+        # Display the image
+        image = Image.open(BytesIO(image_bytes))
+        st.image(image, caption="Generated Image")
         
-        # Display base64 encoded image for debugging
-        st.text("Base64 Encoded Image:")
-        st.text(base64.b64encode(image_bytes).decode())
+        with st.expander("View Image Details"):
+            # DOWNLOAD BUTTON
+            btn = st.download_button(
+                label="Download Image",
+                data=image_bytes,
+                file_name="generated_image.png",
+                mime="image/png",
+            )
+            
+            # Display base64 encoded image for debugging
+            st.text("Base64 Encoded Image:")
+            st.text(base64.b64encode(image_bytes).decode())
+    
+    except Exception as e:
+        st.error(f"An error occurred while processing the image: {str(e)}")
+        st.error("The API might have returned an error message instead of an image. Here's the raw response:")
+        st.text(image_bytes.decode('utf-8', errors='replace'))
