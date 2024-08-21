@@ -22,8 +22,7 @@ st.sidebar.markdown('This is a zero-shot text-to-image generation chatbot using 
 # Model selection
 model_options = {
     "Midjourney v6": "Kvikontent/midjourney-v6",
-    "FLUX.1-schnell": "black-forest-labs/FLUX.1-schnell",
-    "Phi 3.5": "microsoft/Phi-3.5-MoE-instruct"
+    "FLUX.1-schnell": "black-forest-labs/FLUX.1-schnell"
 }
 selected_model = st.sidebar.selectbox("Select Model", list(model_options.keys()))
 
